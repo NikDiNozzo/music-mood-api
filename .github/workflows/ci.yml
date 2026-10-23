@@ -30,16 +30,16 @@ jobs:
       - name: Run tests 
         run: python -m pytest -v 
 
-  package: 
-    needs: test 
-    runs-on: ubuntu-latest 
+package: 
+  needs: test 
+  runs-on: ubuntu-latest 
 
-    steps: 
+  steps: 
      - name: Download repository
-       uses: actions_checkout@v4 
+       uses: actions_checkout@v7 
 
      - name: Upload tested application 
-       uses: actions_checkout@v4 
+       uses: actions_checkout@v7 
        with: 
         name: fastapi-service 
         path: | 
