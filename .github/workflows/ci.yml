@@ -2,7 +2,7 @@ name: FastAPI CI
 
 on: 
   push:
-  pull_request 
+  pull_request: 
 
 permissions: 
   contents: read 
