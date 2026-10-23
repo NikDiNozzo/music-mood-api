@@ -31,10 +31,10 @@ jobs:
         run: python -m pytest -v 
 
   package: 
-  needs: test 
-  runs-on: ubuntu-latest 
+    needs: test 
+    runs-on: ubuntu-latest 
 
-  steps: 
+    steps: 
      - name: Download repository
        uses: actions_checkout@v7 
 
