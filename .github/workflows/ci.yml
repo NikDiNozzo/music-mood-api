@@ -46,4 +46,4 @@ jobs:
              app_final.py 
              requierements.txt 
              README.md 
-         retention-days: 7 
+           retention-days: 7 
