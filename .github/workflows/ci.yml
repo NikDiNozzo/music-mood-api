@@ -13,10 +13,13 @@ jobs:
 
     steps: 
       - name: Download repository
-        uses: actions/checkout@v7 
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with: 
           python-version: '3.12'
-          cache: pip
+          cache: 'pip'
           cache-dependency-path: | 
             requirements.txt 
             requirements-dev.txt 
@@ -24,8 +27,8 @@ jobs:
       - name: Install dependencies 
         run: | 
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-          python -m pip install -r requirements-dev.txt 
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then python -m pip install -r requirements-dev.txt; fi
 
       - name: Run tests 
         run: python -m pytest -v 
@@ -35,15 +38,15 @@ jobs:
     runs-on: ubuntu-latest 
 
     steps: 
-       - name: Download repository
-         uses: actions_checkout@v7 
+      - name: Download repository
+        uses: actions/checkout@v4
 
-       - name: Upload tested application 
-         uses: actions_checkout@v7 
-         with: 
-           name: fastapi-service 
-           path: | 
-             app_final.py 
-             requierements.txt 
-             README.md 
-           retention-days: 7 
+      - name: Upload tested application 
+        uses: actions/upload-artifact@v4
+        with: 
+          name: fastapi-service 
+          path: | 
+            app_final.py 
+            requirements.txt 
+            README.md 
+          retention-days: 7
