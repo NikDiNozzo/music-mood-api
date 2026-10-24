@@ -4,16 +4,20 @@ import logging
 import os
 from collections import Counter
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Path, Query, Request
+from fastapi import FastAPI, HTTPException, Path as ApiPath, Query, Request
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from music_data import TRACKS
 
 load_dotenv()  # Локальные настройки .env не публикуем в Git.
 
 APP_NAME = os.getenv("APP_NAME", "Music Mood API")
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.2.0"
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO").upper(),
@@ -32,9 +36,21 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=APP_NAME,
     version=APP_VERSION,
-    description="Поиск треков и создание небольшого плейлиста под настроение.",
+    description=(
+        "Музыкальный каталог и генератор плейлистов. "
+        "**[Открыть визуальный интерфейс](/ui)** · "
+        "[Проверить состояние](/health). "
+        "Все данные демонстрационные; сервис не воспроизводит аудио."
+    ),
+    openapi_tags=[
+        {"name": "Музыка", "description": "Поиск по каталогу, жанры, настроения и плейлисты."},
+        {"name": "Сервис", "description": "Состояние, версия и параметры приложения."},
+    ],
     lifespan=lifespan,
 )
+
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 @app.middleware("http")
@@ -60,7 +76,14 @@ def root():
         "service": APP_NAME,
         "description": "Музыкальный каталог и плейлисты под настроение",
         "docs": "/docs",
+        "web_ui": "/ui",
     }
+
+
+@app.get("/ui", include_in_schema=False)
+def web_interface():
+    """Визуальная страница для людей; JSON API и Swagger остаются доступны."""
+    return FileResponse(STATIC_DIR / "index.html", media_type="text/html")
 
 
 @app.get("/health", tags=["Сервис"])
@@ -124,7 +147,7 @@ def list_moods():
 
 
 @app.get("/tracks/{track_id}", tags=["Музыка"])
-def get_track(track_id: int = Path(ge=1)):
+def get_track(track_id: int = ApiPath(ge=1)):
     for track in TRACKS:
         if track["id"] == track_id:
             return track

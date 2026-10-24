@@ -16,7 +16,7 @@ def test_health():
 def test_version():
     response = client.get("/version")
     assert response.status_code == 200
-    assert response.json() == {"version": "1.1.0"}
+    assert response.json() == {"version": "1.2.0"}
 
 
 def test_root():
@@ -154,3 +154,31 @@ def test_catalog_has_unique_ids_and_positive_durations():
     assert len(ids) == len(set(ids))
     assert all(track["duration_seconds"] > 0 for track in TRACKS)
     assert all(track["title"] and track["artist"] for track in TRACKS)
+
+
+def test_visual_ui_serves_html():
+    response = client.get("/ui")
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "Music Mood" in response.text
+    assert 'id="track-grid"' in response.text
+
+
+def test_static_assets_are_available():
+    for asset, content_type in [
+        ("/static/styles.css", "text/css"),
+        ("/static/app.js", "javascript"),
+    ]:
+        response = client.get(asset)
+        assert response.status_code == 200
+        assert content_type in response.headers["content-type"]
+
+
+def test_root_points_to_visual_interface():
+    assert client.get("/").json()["web_ui"] == "/ui"
+
+
+def test_docs_still_available():
+    response = client.get("/docs")
+    assert response.status_code == 200
+    assert "swagger-ui" in response.text.lower()

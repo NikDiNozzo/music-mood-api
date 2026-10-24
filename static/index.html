@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d0c16">
+  <meta name="description" content="Music Mood — музыкальный каталог и генератор плейлистов под настроение.">
+  <title>Music Mood — музыка под настроение</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script defer src="/static/app.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" aria-label="Навигация">
+      <a class="brand" href="/ui" aria-label="Music Mood — на главную">
+        <span class="brand-icon">♪</span>
+        <span>music<span class="brand-accent">mood</span><small>YOUR SOUND, YOUR MOOD</small></span>
+      </a>
+      <div class="sidebar-label">ОБЗОР</div>
+      <nav class="sidebar-nav">
+        <a class="nav-link active" href="#catalog"><span class="nav-icon">▦</span> Каталог</a>
+        <a class="nav-link" href="#playlist-editor"><span class="nav-icon">♫</span> Мой плейлист</a>
+        <a class="nav-link" href="/docs" target="_blank" rel="noopener"><span class="nav-icon">⌘</span> API-документация <span class="external">↗</span></a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="info-note"><span class="note-spark">✦</span><strong>Найди свой звук</strong><p>Выбери настроение и получи подборку музыки за пару кликов.</p></div>
+        <div class="sidebar-footer">Учебный проект на FastAPI <span id="app-version">·</span></div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="breadcrumbs">DISCOVER <span>/</span> <strong>МУЗЫКА</strong></div>
+        <div id="api-status" class="status" aria-live="polite"><i></i> Проверяем сервис</div>
+      </header>
+
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <div class="eyebrow"><span>✦</span> ТВОЙ ПЕРСОНАЛЬНЫЙ САУНДТРЕК</div>
+          <h1 id="hero-title">У каждого момента<br>есть <em>свой ритм.</em></h1>
+          <p>Подбирай музыку под настроение, открывай новые треки и собирай плейлист за секунды.</p>
+          <a href="#playlist-editor" class="hero-button">Собрать плейлист <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orbit orbit-outer"></div><div class="orbit orbit-inner"></div>
+          <div class="vinyl"><div class="vinyl-center"><span>♪</span></div></div>
+          <span class="orbit-star star-one">✦</span><span class="orbit-star star-two">✧</span>
+        </div>
+      </section>
+
+      <div class="dashboard-grid">
+        <section class="catalog-panel" id="catalog" aria-labelledby="catalog-title">
+          <div class="section-header">
+            <div><div class="section-overline">ИССЛЕДУЙ МУЗЫКУ</div><h2 id="catalog-title">Каталог треков <span id="track-count" class="count-pill">—</span></h2></div>
+            <div class="small-label">DEMO COLLECTION</div>
+          </div>
+          <div class="filter-bar">
+            <label class="search-wrap"><span class="search-icon" aria-hidden="true">⌕</span><span class="sr-only">Поиск по трекам и исполнителям</span><input id="search" type="search" placeholder="Название или исполнитель..." autocomplete="off"></label>
+            <label class="select-wrap"><span class="sr-only">Жанр каталога</span><select id="catalog-genre"><option value="">Все жанры</option></select></label>
+            <label class="select-wrap"><span class="sr-only">Настроение каталога</span><select id="catalog-mood"><option value="">Все настроения</option></select></label>
+          </div>
+          <div id="track-grid" class="track-grid" aria-live="polite"><p class="empty-state">Загружаем каталог...</p></div>
+          <div class="catalog-footer">Музыка из демонстрационного каталога · Воспроизведение не поддерживается</div>
+        </section>
+
+        <aside class="playlist-panel" id="playlist-editor" aria-labelledby="playlist-heading">
+          <div class="builder-head"><span class="builder-icon" aria-hidden="true">♫</span><span class="tag">MOOD MIXER</span></div>
+          <h2 id="playlist-heading">Твой плейлист.<br><em>Твои правила.</em></h2>
+          <p class="builder-intro">Задай настроение и время — мы найдём подходящую музыку.</p>
+          <form id="playlist-form">
+            <label for="playlist-mood">НАСТРОЕНИЕ</label>
+            <select id="playlist-mood" required><option value="calm">Спокойное</option></select>
+            <label for="playlist-genre">ЖАНР</label>
+            <select id="playlist-genre"><option value="">Любой жанр</option></select>
+            <label for="playlist-minutes">ДЛИТЕЛЬНОСТЬ <span>В МИНУТАХ</span></label>
+            <input id="playlist-minutes" type="number" min="1" max="180" value="10" required>
+            <button class="generate-button" type="submit">✦ &nbsp; Создать подборку <span aria-hidden="true">→</span></button>
+          </form>
+          <div id="playlist-results" class="playlist-results" aria-live="polite">
+            <div class="playlist-placeholder"><span class="placeholder-icon">♫</span><p>Твой следующий любимый плейлист начинается здесь.</p></div>
+          </div>
+        </aside>
+      </div>
+      <footer class="page-footer"><span>Music Mood API · Built with FastAPI &amp; Python</span><a href="/docs" target="_blank" rel="noopener">Открыть Swagger UI ↗</a></footer>
+    </main>
+  </div>
+</body>
+</html>
