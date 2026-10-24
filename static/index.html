@@ -19,7 +19,7 @@
       <div class="sidebar-label">ОБЗОР</div>
       <nav class="sidebar-nav">
         <a class="nav-link active" href="#catalog"><span class="nav-icon">▦</span> Каталог</a>
-        <a class="nav-link" href="#playlist-editor"><span class="nav-icon">♫</span> Мой плейлист</a>
+        <button class="nav-link" type="button" id="my-playlist-link" aria-haspopup="dialog" aria-controls="saved-playlist-dialog"><span class="nav-icon">♫</span> Мой плейлист <span class="saved-badge" id="saved-track-count" aria-label="Сохранённых треков">0</span></button>
         <a class="nav-link" href="/docs" target="_blank" rel="noopener"><span class="nav-icon">⌘</span> API-документация <span class="external">↗</span></a>
       </nav>
       <div class="sidebar-bottom">
@@ -60,6 +60,7 @@
             <label class="select-wrap"><span class="sr-only">Настроение каталога</span><select id="catalog-mood"><option value="">Все настроения</option></select></label>
           </div>
           <div id="track-grid" class="track-grid" aria-live="polite"><p class="empty-state">Загружаем каталог...</p></div>
+          <button type="button" id="show-more-tracks" class="show-more-button" hidden>Показать ещё треки</button>
           <div class="catalog-footer">Музыка из демонстрационного каталога · Воспроизведение не поддерживается</div>
         </section>
 
@@ -75,6 +76,7 @@
             <label for="playlist-minutes">ДЛИТЕЛЬНОСТЬ <span>В МИНУТАХ</span></label>
             <input id="playlist-minutes" type="number" min="1" max="180" value="10" required>
             <button class="generate-button" type="submit">✦ &nbsp; Создать подборку <span aria-hidden="true">→</span></button>
+            <div id="playlist-feedback" class="feedback-note" role="status" aria-live="polite" hidden></div>
           </form>
           <div id="playlist-results" class="playlist-results" aria-live="polite">
             <div class="playlist-placeholder"><span class="placeholder-icon">♫</span><p>Твой следующий любимый плейлист начинается здесь.</p></div>
@@ -83,6 +85,19 @@
       </div>
       <footer class="page-footer"><span>Music Mood API · Built with FastAPI &amp; Python</span><a href="/docs" target="_blank" rel="noopener">Открыть Swagger UI ↗</a></footer>
     </main>
+  </div>
+
+  <div class="saved-overlay" id="saved-playlist-dialog" role="dialog" aria-modal="true" aria-labelledby="saved-title" tabindex="-1" hidden>
+    <div class="saved-backdrop" data-close-playlist="true"></div>
+    <section class="saved-drawer">
+      <div class="saved-head">
+        <div><div class="section-overline">ТВОЯ МУЗЫКА</div><h2 id="saved-title">Мой плейлист <span aria-hidden="true">♫</span></h2></div>
+        <button type="button" id="close-playlist" class="close-drawer" aria-label="Закрыть плейлист">×</button>
+      </div>
+      <p class="saved-subtitle">Последняя созданная подборка сохраняется в этом браузере.</p>
+      <div id="saved-playlist-content" class="saved-content" aria-live="polite"></div>
+      <button type="button" id="new-playlist-button" class="generate-button">Собрать новую подборку →</button>
+    </section>
   </div>
 </body>
 </html>
