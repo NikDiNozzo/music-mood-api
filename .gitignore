@@ -1,3 +1,21 @@
-test_env
-test_venv
-.env 
+# Виртуальные окружения
+.venv/
+venv/
+test_env/
+test_venv/
+
+# Локальная конфигурация / секреты
+.env
+.env.*
+!.env.example
+
+# Файлы Python и тестов
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+
+# Системные файлы и IDE
+.DS_Store
+.idea/
+.vscode/
