@@ -16,7 +16,7 @@ def test_health():
 def test_version():
     response = client.get("/version")
     assert response.status_code == 200
-    assert response.json() == {"version": "1.0.0"}
+    assert response.json() == {"version": "1.1.0"}
 
 
 def test_root():
@@ -102,3 +102,55 @@ def test_info_uses_environment(monkeypatch):
     response = client.get("/info")
     assert response.status_code == 200
     assert response.json()["author"] == "Test Author"
+
+
+def test_moods():
+    response = client.get("/moods")
+    assert response.status_code == 200
+    assert response.json()["moods"] == {
+        "calm": 3, "energetic": 3, "focus": 2, "upbeat": 4
+    }
+
+
+def test_filters_ignore_case_and_surrounding_spaces():
+    response = client.get("/tracks", params={"genre": " POP ", "mood": " Calm "})
+    assert response.status_code == 200
+    assert response.json()["count"] == 2
+
+
+def test_playlist_filters_by_genre():
+    response = client.get("/playlist", params={"mood": " CALM ", "genre": " pop ", "max_minutes": 10})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["mood"] == "calm"
+    assert body["genre"] == "pop"
+    assert body["track_count"] == 2
+    assert all(track["genre"] == "pop" for track in body["tracks"])
+    assert body["total_seconds"] <= 600
+
+
+def test_unknown_playlist_genre_returns_404():
+    response = client.get("/playlist?mood=calm&genre=metal")
+    assert response.status_code == 404
+    assert "Жанр не найден" in response.json()["detail"]
+
+
+def test_whitespace_only_search_returns_422():
+    response = client.get("/tracks", params={"q": "   "})
+    assert response.status_code == 422
+
+
+def test_playlist_with_no_matching_tracks_explains_result():
+    response = client.get("/playlist?mood=calm&max_minutes=1")
+    assert response.status_code == 200
+    assert response.json()["track_count"] == 0
+    assert "message" in response.json()
+
+
+def test_catalog_has_unique_ids_and_positive_durations():
+    from music_data import TRACKS
+
+    ids = [track["id"] for track in TRACKS]
+    assert len(ids) == len(set(ids))
+    assert all(track["duration_seconds"] > 0 for track in TRACKS)
+    assert all(track["title"] and track["artist"] for track in TRACKS)

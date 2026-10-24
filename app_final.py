@@ -1,4 +1,4 @@
-"""Music Mood API — учебный музыкальный сервис на FastAPI."""
+"""Music Mood API — небольшой музыкальный сервис на FastAPI."""
 
 import logging
 import os
@@ -10,10 +10,10 @@ from fastapi import FastAPI, HTTPException, Path, Query, Request
 
 from music_data import TRACKS
 
-load_dotenv()  # Подхватывает локальный .env, если он есть (в Git его не добавляем).
+load_dotenv()  # Локальные настройки .env не публикуем в Git.
 
 APP_NAME = os.getenv("APP_NAME", "Music Mood API")
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.1.0"
 
 logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO").upper(),
@@ -39,10 +39,18 @@ app = FastAPI(
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    """Логируем адрес запроса и HTTP-статус ответа."""
+    """Логируем HTTP-метод, адрес запроса и код ответа."""
     response = await call_next(request)
     logger.info("%s %s -> %s", request.method, request.url.path, response.status_code)
     return response
+
+
+def normalize_filter(value: str, name: str) -> str:
+    """Игнорируем регистр и внешние пробелы, но запрещаем пустые значения."""
+    normalized = value.strip().casefold()
+    if not normalized:
+        raise HTTPException(status_code=422, detail=f"Параметр {name} не может быть пустым")
+    return normalized
 
 
 @app.get("/", tags=["Сервис"])
@@ -67,7 +75,7 @@ def version():
 
 @app.get("/info", tags=["Сервис"])
 def info():
-    """Сохраняем идею /info из исходной учебной версии."""
+    """Сохраняем учебный маршрут и настройку через переменную окружения."""
     return {
         "app_name": os.getenv("APP_NAME", "Music Mood API"),
         "author": os.getenv("APP_AUTHOR", "Никита"),
@@ -80,27 +88,39 @@ def list_tracks(
     mood: str | None = Query(default=None, min_length=1, max_length=50),
     q: str | None = Query(default=None, min_length=1, max_length=100),
 ):
-    """Показать каталог; необязательные фильтры работают совместно."""
+    """Показываем каталог с необязательными совместно работающими фильтрами."""
     results = TRACKS
+
     if genre is not None:
-        results = [track for track in results if track["genre"] == genre.strip().casefold()]
+        genre = normalize_filter(genre, "genre")
+        results = [track for track in results if track["genre"] == genre]
     if mood is not None:
-        results = [track for track in results if track["mood"] == mood.strip().casefold()]
+        mood = normalize_filter(mood, "mood")
+        results = [track for track in results if track["mood"] == mood]
     if q is not None:
-        search = q.strip().casefold()
+        search = normalize_filter(q, "q")
         results = [
-            track for track in results
+            track
+            for track in results
             if search in track["title"].casefold() or search in track["artist"].casefold()
         ]
+
     logger.info("Каталог: найдено %s треков", len(results))
     return {"count": len(results), "tracks": results}
 
 
 @app.get("/genres", tags=["Музыка"])
 def list_genres():
-    """Количество композиций каждого жанра."""
+    """Возвращаем жанры и количество треков в каждом из них."""
     counts = Counter(track["genre"] for track in TRACKS)
     return {"genres": dict(sorted(counts.items()))}
+
+
+@app.get("/moods", tags=["Музыка"])
+def list_moods():
+    """Подсказываем пользователю допустимые значения параметра mood."""
+    counts = Counter(track["mood"] for track in TRACKS)
+    return {"moods": dict(sorted(counts.items()))}
 
 
 @app.get("/tracks/{track_id}", tags=["Музыка"])
@@ -113,7 +133,7 @@ def get_track(track_id: int = Path(ge=1)):
 
 
 def get_default_playlist_minutes() -> int:
-    """Безопасно читаем настройку из окружения."""
+    """Безопасно читаем длительность плейлиста из переменной окружения."""
     raw_value = os.getenv("DEFAULT_PLAYLIST_MINUTES", "15")
     try:
         minutes = int(raw_value)
@@ -129,19 +149,31 @@ def get_default_playlist_minutes() -> int:
 def make_playlist(
     mood: str = Query(description="calm, upbeat, energetic или focus", min_length=1, max_length=50),
     max_minutes: int | None = Query(default=None, ge=1, le=180),
+    genre: str | None = Query(default=None, min_length=1, max_length=50),
 ):
-    """Подобрать треки заданного настроения без превышения времени.
+    """Подбираем песни по настроению, жанру и ограничению времени.
 
-    Алгоритм простой: перебрать каталог по порядку и добавить трек,
-    если он целиком помещается в оставшееся время.
+    Это детерминированный алгоритм: идём по каталогу и добавляем песню,
+    если она полностью помещается в оставшееся время.
     """
-    mood = mood.strip().casefold()
+    mood = normalize_filter(mood, "mood")
     available_moods = {track["mood"] for track in TRACKS}
     if mood not in available_moods:
+        logger.warning("Неизвестное настроение: %s", mood)
         raise HTTPException(
             status_code=404,
             detail=f"Настроение не найдено. Доступны: {', '.join(sorted(available_moods))}",
         )
+
+    if genre is not None:
+        genre = normalize_filter(genre, "genre")
+        available_genres = {track["genre"] for track in TRACKS}
+        if genre not in available_genres:
+            logger.warning("Неизвестный жанр: %s", genre)
+            raise HTTPException(
+                status_code=404,
+                detail=f"Жанр не найден. Доступны: {', '.join(sorted(available_genres))}",
+            )
 
     limit = max_minutes if max_minutes is not None else get_default_playlist_minutes()
     max_seconds = limit * 60
@@ -149,15 +181,24 @@ def make_playlist(
     total_seconds = 0
 
     for track in TRACKS:
-        if track["mood"] == mood and total_seconds + track["duration_seconds"] <= max_seconds:
+        if track["mood"] != mood or (genre is not None and track["genre"] != genre):
+            continue
+        if total_seconds + track["duration_seconds"] <= max_seconds:
             selected.append(track)
             total_seconds += track["duration_seconds"]
 
-    logger.info("Плейлист %s на %s мин: %s треков", mood, limit, len(selected))
-    return {
+    logger.info(
+        "Плейлист: настроение=%s, жанр=%s, лимит=%s мин, треков=%s",
+        mood, genre or "любой", limit, len(selected),
+    )
+    result = {
         "mood": mood,
+        "genre": genre,
         "max_minutes": limit,
         "total_seconds": total_seconds,
         "track_count": len(selected),
         "tracks": selected,
     }
+    if not selected:
+        result["message"] = "Подходящих треков не найдено или они не помещаются в лимит времени"
+    return result
