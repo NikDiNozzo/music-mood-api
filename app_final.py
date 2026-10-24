@@ -16,7 +16,7 @@ from music_data import TRACKS
 load_dotenv()  # Локальные настройки .env не публикуем в Git.
 
 APP_NAME = os.getenv("APP_NAME", "Music Mood API")
-APP_VERSION = "1.2.0"
+APP_VERSION = "1.3.0"
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 logging.basicConfig(
@@ -200,19 +200,22 @@ def make_playlist(
 
     limit = max_minutes if max_minutes is not None else get_default_playlist_minutes()
     max_seconds = limit * 60
+    matching_tracks = [
+        track for track in TRACKS
+        if track["mood"] == mood and (genre is None or track["genre"] == genre)
+    ]
     selected = []
     total_seconds = 0
 
-    for track in TRACKS:
-        if track["mood"] != mood or (genre is not None and track["genre"] != genre):
-            continue
+    for track in matching_tracks:
         if total_seconds + track["duration_seconds"] <= max_seconds:
             selected.append(track)
             total_seconds += track["duration_seconds"]
 
+    available_seconds = sum(track["duration_seconds"] for track in matching_tracks)
     logger.info(
-        "Плейлист: настроение=%s, жанр=%s, лимит=%s мин, треков=%s",
-        mood, genre or "любой", limit, len(selected),
+        "Плейлист: настроение=%s, жанр=%s, лимит=%s мин, найдено=%s, выбрано=%s",
+        mood, genre or "любой", limit, len(matching_tracks), len(selected),
     )
     result = {
         "mood": mood,
@@ -220,8 +223,23 @@ def make_playlist(
         "max_minutes": limit,
         "total_seconds": total_seconds,
         "track_count": len(selected),
+        "available_count": len(matching_tracks),
+        "available_seconds": available_seconds,
+        "unused_seconds": max_seconds - total_seconds,
         "tracks": selected,
     }
-    if not selected:
-        result["message"] = "Подходящих треков не найдено или они не помещаются в лимит времени"
+    if not matching_tracks:
+        result["message"] = "По выбранным настроению и жанру в каталоге пока нет треков. Попробуйте другой жанр."
+    elif not selected:
+        shortest = min(track["duration_seconds"] for track in matching_tracks)
+        result["message"] = (
+            f"Ни один из {len(matching_tracks)} треков не помещается в {limit} мин. "
+            f"Самая короткая композиция длится {shortest // 60}:{shortest % 60:02d}. "
+            "Увеличьте длительность."
+        )
+    elif len(selected) == len(matching_tracks) and total_seconds < max_seconds:
+        result["notice"] = (
+            f"Все {len(selected)} доступных треков уже включены. "
+            "Чтобы собрать более длинный плейлист, выберите другой жанр или «Любой жанр»."
+        )
     return result
