@@ -4,7 +4,7 @@
 
 **Музыкальный каталог, плейлисты под настроение и собственный веб-интерфейс на FastAPI**
 
-[![CI](https://github.com/NikDiNozzo/test_project_1_module/actions/workflows/ci.yml/badge.svg)](https://github.com/NikDiNozzo/test_project_1_module/actions/workflows/ci.yml)
+[![CI](https://github.com/NikDiNozzo/music-mood-api/actions/workflows/ci.yml/badge.svg)](https://github.com/NikDiNozzo/music-mood-api/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.128-009688?logo=fastapi&logoColor=white)
 ![Version](https://img.shields.io/badge/version-1.3.0-9B75ED)
@@ -54,8 +54,8 @@ Music Mood API помогает найти композиции по испол�
 Клонируйте проект и перейдите в его каталог:
 
 ```bash
-git clone https://github.com/NikDiNozzo/test_project_1_module.git
-cd test_project_1_module
+git clone https://github.com/NikDiNozzo/music-mood-api.git
+cd music-mood-api
 ```
 
 **macOS / Linux**
@@ -211,7 +211,7 @@ python -m pytest -v
 
 Тестируются технические маршруты, каталог, комбинации фильтров, ошибки `404/422`, генерация длинного плейлиста, сообщения о нехватке треков, конфигурация и наличие элементов HTML/CSS/JS. Для тестов используется `TestClient` — внешний сервер запускать не нужно.
 
-**GitHub Actions** (`.github/workflows/ci.yml`): при `push` и `pull_request` запускает Ubuntu + Python 3.12, устанавливает зависимости, выполняет тесты и **только после их успешного завершения** публикует `music-mood-api` с исходниками и файлами интерфейса. Последние запуски: [Actions](https://github.com/NikDiNozzo/test_project_1_module/actions). Артефакт хранится **7 дней**.
+**GitHub Actions** (`.github/workflows/ci.yml`): при `push` и `pull_request` запускает Ubuntu + Python 3.12, устанавливает зависимости, выполняет тесты и **только после их успешного завершения** публикует `music-mood-api` с исходниками и файлами интерфейса. Последние запуски: [Actions](https://github.com/NikDiNozzo/music-mood-api/actions). Артефакт хранится **7 дней**.
 
 ## Диагностика
 
