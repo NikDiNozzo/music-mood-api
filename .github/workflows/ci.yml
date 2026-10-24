@@ -40,6 +40,8 @@ jobs:
           path: |
             app_final.py
             music_data.py
+            static/
+            docs/preview.png
             requirements.txt
             requirements-dev.txt
             README.md
